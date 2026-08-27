@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="AKBody_mesh.json" />
+    <None Remove="AKMag_mesh.json" />
+    <None Remove="AKBolt_mesh.json" />
+    <None Remove="AS50Body_mesh.json" />
+    <None Remove="AS50Mag_mesh.json" />
+    <None Remove="AS50Bolt_mesh.json" />
+    <None Remove="RM870Body_mesh.json" />
+    <None Remove="RM870Bolt_and_ForeEnd_mesh.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Models\AKBody_mesh.json" />
+    <EmbeddedResource Include="Models\AKMag_mesh.json" />
+    <EmbeddedResource Include="Models\AKBolt_mesh.json" />
+    <EmbeddedResource Include="Models\AS50Body_mesh.json" />
+    <EmbeddedResource Include="Models\AS50Mag_mesh.json" />
+    <EmbeddedResource Include="Models\AS50Bolt_mesh.json" />
+    <EmbeddedResource Include="Models\RM870Body_mesh.json" />
+    <EmbeddedResource Include="Models\RM870Bolt_and_ForeEnd_mesh.json" />
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy &quot;$(TargetPath)&quot; &quot;D:\SteamLibrary\steamapps\common\FRUKT Demo\Mods&quot;" />
+  </Target>
+
+</Project>
