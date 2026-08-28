@@ -8,6 +8,10 @@ namespace GunsGunsGuns.Core
         public string Name      = "Weapon";
         public Color  IconColor = Color.white;
 
+        /// <summary>Prefix that ties this weapon to its Config fields ("AK" → Config.AK_FireRateRPM).
+        /// Leave it null and the weapon simply has no live tunables. See WeaponTuning.</summary>
+        public string Key       = null;
+
         // ── Firing ────────────────────────────────────────────────────────────
         public float FireRateRPM   = 600f;
         public int   Pellets       = 1;     // >1 makes it a shotgun
@@ -37,8 +41,8 @@ namespace GunsGunsGuns.Core
 
         // ── Wound ─────────────────────────────────────────────────────────────
         public float DepthScale  = 1f;
-        public float ConeRadius0 = 1f;
-        public float ConeRadius1 = 3f;
+        public float EntryWound = 1f;
+        public float ExitWound = 3f;
 
         // ── Model ─────────────────────────────────────────────────────────────
         public string  BodyMesh   = null;
@@ -104,18 +108,24 @@ namespace GunsGunsGuns.Core
             // Assault rifle
             new WeaponProfile
             {
-                Name = "AK-47", IconColor = new Color(0.85f, 0.55f, 0.15f),
+                Name = "AK-47", Key = "AK", IconColor = new Color(0.85f, 0.55f, 0.15f),
+                // ──── Firing ────────────────────────────────────────────────────────
                 FireRateRPM = 600f, Pellets = 1, SpreadDegrees = 0.2f,
-                MuzzleVelocity = 220f,
-                ImpactImpulse = 80f, ImpactTorque = 5f, WorldImpulse = 40f,
-                MaxPenetrations = 3, PenetrationLoss = 0.35f, MaxPenetrationDepth = 0.8f,
-                DepthScale = 1f, ConeRadius0 = 1f, ConeRadius1 = 3f,
+                MuzzleVelocity = 220f, RoundLifetime = 2.5f,
+                ImpactImpulse = 30f, ImpactTorque = 6f, WorldImpulse = 10f,
+                MaxPenetrations = 3, PenetrationLoss = 0.35f, MaxPenetrationDepth = 0.8f, PenetrationDeflect = 1f,
+                RicochetAngle = 65f, MaxBounces = 1, RicochetEnergyLoss = 0.6f,
+                DepthScale = 1f, EntryWound = 1f, ExitWound = 3f,
+                // ──── View and recoil ───────────────────────────────────────────────
                 ShakeAmount = 0.05f, ShotPitch = 0.65f, TracerSize = 0.04f,
-                RecoilKick = 0.01f, RecoilRise = 1f, RecoilRock = 0.5f,
+                RecoilKick = 0.01f, RecoilRise = 0.5f, RecoilRock = 0.5f,
                 RecoilStiffness = 90f, RecoilDamping = 11f,
-                ViewKick = 5.0f, ViewYaw = 0.9f, ViewStiffness = 70f, ViewDamping = 11f,
-                BodyMesh = "AKBody_mesh", MagMesh = "AKMag_mesh", BoltMesh = "AKBolt_mesh",
-                ModelScale = 0.09f,
+                ViewKick = 3.0f, ViewYaw = 0.9f, 
+                ViewStiffness = 70f, ViewDamping = 11f,
+                AdsZoom = 0.65f, AdsTime = 0.18f,
+                // ──── Model ─────────────────────────────────────────────────────────────
+                ShellForce = 5f, ShellSpin = 1f,
+                ShellLength = 0.039f, ShellRadius = 0.0057f,
                 ModelPos   = new Vector3(-0.013f, 0.09f, -0.067f),
                 ModelRot   = new Vector3(180f, 90f, 90.5f),
                 MagOffset  = new Vector3( 0.083344f, -0.62418f, 0f),
@@ -124,72 +134,77 @@ namespace GunsGunsGuns.Core
                 MuzzleOffset = new Vector3( 0f, 4.0411f, 0f),
                 AdsOffset    = new Vector3(-0.1160f, 0.1000f, -0.0100f),
                 EjectOffset  = new Vector3(-0.1389f, -0.4396f, -0.7507f),
-                ShellLength = 0.039f, ShellRadius = 0.0057f,
+                BodyMesh = "AKBody_mesh", MagMesh = "AKMag_mesh", BoltMesh = "AKBolt_mesh",
+                ModelScale = 0.09f,
             },
 
             // Shotgun
             new WeaponProfile
             {
-                Name = "RM870", IconColor = new Color(0.75f, 0.2f, 0.2f),
+                Name = "RM870", Key = "RM870", IconColor = new Color(0.75f, 0.2f, 0.2f),
+                // ──── Firing ────────────────────────────────────────────────────────
                 FireRateRPM = 30f, Pellets = 12, SpreadDegrees = 4.5f,
                 MuzzleVelocity = 300f, RoundLifetime = 2.5f,
-                ImpactImpulse = 90f, ImpactTorque = 6f, WorldImpulse = 25f,
-                MaxPenetrations = 1, PenetrationLoss = 0.75f, MaxPenetrationDepth = 0.3f,
+                ImpactImpulse = 30f, ImpactTorque = 6f, WorldImpulse = 10f,
+                MaxPenetrations = 1, PenetrationLoss = 0.75f, MaxPenetrationDepth = 0.3f, PenetrationDeflect = 2f,
                 RicochetAngle = 72f, MaxBounces = 1, RicochetEnergyLoss = 0.6f,
-                DepthScale = 0.55f, ConeRadius0 = 1f, ConeRadius1 = 2f,
+                DepthScale = 0.55f, EntryWound = 1f, ExitWound = 2f,
+                // ──── View and recoil ───────────────────────────────────────────────
                 ShakeAmount = 0.55f, ShotPitch = 0.45f, TracerSize = 0.03f,
-                BodyMesh = "RM870Body_mesh", BoltMesh = "RM870Bolt_and_ForeEnd_mesh",
-                ModelScale = 0.13f,
+                BoltBackTime = 0.12f, BoltDwell = 0.2f, BoltCycleTime = 0.25f, CycleDelay = 0.25f,
+                RecoilKick = 0.022f, RecoilRise = 3f, RecoilRock = 1.6f,
+                RecoilStiffness = 90f, RecoilDamping = 11f,
+                ViewKick = 3.2f, ViewYaw = 0.9f, ViewStiffness = 70f, ViewDamping = 11f,
+                AdsZoom = 0.60f, AdsTime = 0.14f,
+                // ──── Model ─────────────────────────────────────────────────────────────
+                ShellForce = 1.8f, ShellSpin = 10f,
+                ShellLength = 0.070f, ShellRadius = 0.0102f,
                 ModelPos   = new Vector3(0.067f, -0.005f, 0.283f),
                 ModelRot   = new Vector3(0f, -90f, 0f),
                 BoltOffset = new Vector3(-2.21498f, 0.432121f, 0f),
                 BoltTravel = new Vector3(-1.0f, 0f, 0f),
-                BoltBackTime = 0.12f, BoltDwell = 0.2f, BoltCycleTime = 0.25f,
-                CycleDelay = 0.25f,
-                RecoilKick = 0.022f, RecoilRise = 3f, RecoilRock = 1.6f,
-                RecoilStiffness = 90f, RecoilDamping = 11f,
-                ViewKick = 3.2f, ViewYaw = 0.9f, ViewStiffness = 70f, ViewDamping = 11f,
+                AdsOffset = new Vector3(-0.1160f, 0.1410f, -0.2580f),
                 MuzzleOffset = new Vector3( 4.0269f,  0.7308f,  0f),
                 EjectOffset  = new Vector3(-1.3462f, -0.1577f, -0.0462f),
-                ShellLength = 0.070f, ShellRadius = 0.0102f,
-                ShellForce = 1.8f, ShellSpin = 10f,
-                AdsZoom = 0.60f, AdsTime = 0.14f,
-                AdsOffset = new Vector3(-0.1160f, 0.1410f, -0.2580f),
+                BodyMesh = "RM870Body_mesh", BoltMesh = "RM870Bolt_and_ForeEnd_mesh",
+                ModelScale = 0.13f,
             },
 
             // Anti-materiel rifle
             new WeaponProfile
             {
-                Name = "AS50", IconColor = new Color(0.35f, 0.75f, 0.95f),
+                Name = "AS50", Key = "AS50", IconColor = new Color(0.35f, 0.75f, 0.95f),
+                // ──── Firing ────────────────────────────────────────────────────────
                 FireRateRPM = 35f, Pellets = 1, SpreadDegrees = 0f,
                 MuzzleVelocity = 800f, RoundGravity = -6f, RoundLifetime = 12f,
-                ImpactImpulse = 600f, ImpactTorque = 14f, WorldImpulse = 100f,
-                MaxPenetrations = 12, PenetrationLoss = 0.12f, MaxPenetrationDepth = 2.5f,
-                PenetrationDeflect = 1f,
+                ImpactImpulse = 600f, ImpactTorque = 14f, WorldImpulse = 400f,
+                MaxPenetrations = 12, PenetrationLoss = 0.12f, MaxPenetrationDepth = 2.5f, PenetrationDeflect = 1f,
                 RicochetAngle = 78f, MaxBounces = 2, RicochetEnergyLoss = 0.25f,
-                DepthScale = 2.4f, ConeRadius0 = 2f, ConeRadius1 = 6f,
+                DepthScale = 2.4f, EntryWound = 2f, ExitWound = 4f,
+                // ──── View and recoil ───────────────────────────────────────────────
                 ShakeAmount = 0.9f, ShotPitch = 0.32f, TracerSize = 0.07f,
-                BodyMesh = "AS50Body_mesh", MagMesh = "AS50Mag_mesh", BoltMesh = "AS50Bolt_mesh",
-                ModelScale = 0.0974f,
+                BoltBackTime = 0.05f, BoltCycleTime = 0.12f,
+                RecoilKick = 0.030f, RecoilRise = 3.5f, RecoilRock = 1.4f,
+                RecoilStiffness = 70f, RecoilDamping = 10f,
+                ViewKick = 4.5f, ViewYaw = 0.7f, ViewStiffness = 55f, ViewDamping = 10f,  
+                ScopeRadius = 0.2006f,
+                ScopeFov    = 8f,
+                AdsZoom = 0.85f, AdsTime = 0.30f,
+                AdsSway = 0.22f, AdsSpread = 0f, AdsShake = 0.85f,
+                // ──── Model ─────────────────────────────────────────────────────────────
+                ShellLength = 0.099f, ShellRadius = 0.0102f,
+                ShellForce = 2.6f, ShellSpin = 16f,
                 ModelPos   = new Vector3(0.067f, -0.075f, 0.183f),
                 ModelRot   = new Vector3(180f, 90.5f, 90f),
                 MagOffset  = new Vector3(-1.0072f, -1.6918f,  0f),
                 BoltOffset = new Vector3(-1.314f,  -3.9869f,  0f),
                 BoltTravel = new Vector3(0f, -0.85f, 0f),
-                BoltBackTime = 0.05f, BoltCycleTime = 0.12f,
-                RecoilKick = 0.030f, RecoilRise = 3.5f, RecoilRock = 1.4f,
-                RecoilStiffness = 70f, RecoilDamping = 10f,
-                ViewKick = 4.5f, ViewYaw = 0.7f, ViewStiffness = 55f, ViewDamping = 10f,
                 MuzzleOffset = new Vector3(-1.1133f,  8.0276f, -0.0837f),
                 EjectOffset  = new Vector3(-1.3000f, -2.0609f, -0.4928f),
-                ShellLength = 0.099f, ShellRadius = 0.0102f,
-                ShellForce = 2.6f, ShellSpin = 16f,
                 ScopeLens   = new Vector3(-2.1058f, -4.1300f, 0f),
-                ScopeRadius = 0.2006f,
-                ScopeFov    = 8f,
-                AdsZoom = 0.85f, AdsTime = 0.30f,
                 AdsOffset = new Vector3(-0.0980f, 0.0510f, -0.0520f),
-                AdsSway = 0.22f, AdsSpread = 0f, AdsShake = 0.85f,
+                BodyMesh = "AS50Body_mesh", MagMesh = "AS50Mag_mesh", BoltMesh = "AS50Bolt_mesh",
+                ModelScale = 0.0974f,
             },
         };
 

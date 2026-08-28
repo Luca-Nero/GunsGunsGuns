@@ -109,6 +109,7 @@ namespace GunsGunsGuns.View
                 p.ScopeRadius = Mathf.Max(0.001f, p.ScopeRadius * (1f / scale));
                 p.ScopeFov    = Mathf.Clamp(p.ScopeFov + fov, 1f, 90f);
                 AkScope.Refresh(p);
+                WeaponTuning.Capture(p);   // keep the menu's copy of this weapon in step
 
                 MelonLogger.Msg($"[AK] {p.Name} scope  lens=({p.ScopeLens.x:F4}, {p.ScopeLens.y:F4}, {p.ScopeLens.z:F4})  " +
                                 $"radius={p.ScopeRadius:F4}  fov={p.ScopeFov:F1}  [step {s:F3}]");
@@ -117,6 +118,7 @@ namespace GunsGunsGuns.View
 
             p.AdsOffset += move;
             p.AdsZoom    = Mathf.Clamp(p.AdsZoom * scale, 0.05f, 1f);
+            WeaponTuning.Capture(p);   // AdsZoom is menu-editable too — don't let the two drift
 
             MelonLogger.Msg($"[AK] {p.Name} sight  offset=({p.AdsOffset.x:F4}, {p.AdsOffset.y:F4}, {p.AdsOffset.z:F4})  " +
                             $"zoom={p.AdsZoom:F3}  [step {s:F3}]");

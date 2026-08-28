@@ -371,8 +371,8 @@ namespace GunsGunsGuns.Core
             var voxelMesh = limb.wtb;
             if (voxelMesh == null) return;
 
-            float r0 = p.ConeRadius0 * radiusScale;
-            float r1 = p.ConeRadius1 * radiusScale;
+            float r0 = p.EntryWound * radiusScale;
+            float r1 = p.ExitWound * radiusScale;
             int stride = Mathf.Max(1, Config.ConeStep);
 
             int n = 0;
