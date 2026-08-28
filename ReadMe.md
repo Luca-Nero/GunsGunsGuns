@@ -72,6 +72,8 @@ If you enjoy my work and want to support future updates, feel free to [buy me a 
 
 ## Credits
 
+Shoutout to @TheCLsOfCasey on Discord for the helpful feedback and testing, leading to the addition of weapon Customizability
+
 All models were taken off of Sketchfab from [TastyTony](https://sketchfab.com/TastyTony) so huge thanks to them! 
 
 ## License
