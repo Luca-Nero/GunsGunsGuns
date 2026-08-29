@@ -22,7 +22,7 @@ namespace GunsGunsGuns.Core
     public class Core : MelonMod
     {
         // ── Versioning & Dependences ─────────────────────────────────────────────────────────────
-        public const string Version = "2.1.0";
+        public const string Version = "2.1.1";
         private const int LibMajor = 2, LibMinor = 1, LibPatch = 0;
         private bool _active;
 
@@ -33,7 +33,11 @@ namespace GunsGunsGuns.Core
 
             Init();
         }
-
+        public override void OnLateInitializeMelon()
+        {
+            if (_active) return;
+            try { Unregister(FruitGate.FailureReason, silent: true); } catch { }
+        }
         private void Init() 
         {
             WeaponTuning.Bind();
@@ -63,7 +67,7 @@ namespace GunsGunsGuns.Core
 
             FruitUpdateCheck.Register("GunsGunsGuns", Version, "Luca-Nero", "GunsGunsGuns");
 
-            LoggerInstance.Msg("GunsGunsGuns v2.0.1 loaded.");
+            LoggerInstance.Msg("GunsGunsGuns v2.1.1 loaded.");
         }
 
 
@@ -313,13 +317,11 @@ namespace GunsGunsGuns.Core
         {
             var ci = System.Globalization.CultureInfo.InvariantCulture;
             var sb = new System.Text.StringBuilder();
-            sb.AppendLine("# GunsGunsGuns v2.0  —  Configuration");
+            sb.AppendLine("# GunsGunsGuns v2.1.1  —  Configuration");
 
             foreach (var f in Fields())
             {
                 object v = f.GetValue(null);
-                // Same precision the menu writes with — a keypad-tuned value must survive a
-                // round trip through this file unchanged.
                 string s = f.FieldType == typeof(float) ? ((float)v).ToString("0.##############", ci)
                          : f.FieldType == typeof(bool) ? ((bool)v ? "true" : "false")
                          : System.Convert.ToString(v, ci);
