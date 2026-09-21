@@ -313,7 +313,7 @@ namespace GunsGunsGuns.Core
 
         private static Transform FindSelectedItemPivot()
         {
-            var gaToolbar = UnityEngine.Object.FindObjectOfType<GAToolbarReferences>(true);
+            var gaToolbar = FruitLib.FruitScene.First<GAToolbarReferences>();
             if (gaToolbar == null) return null;
 
             for (int i = 0; i < gaToolbar.transform.childCount; i++)

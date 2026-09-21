@@ -22,7 +22,7 @@ namespace GunsGunsGuns.Projectiles
             Custom(port, p);
         }
 
-        private static ShellsEjectionController _ctl;
+        private static ShellEjector _ctl;
         private static float _nextLookup;
         private static bool  _nativeFailed;
 
@@ -31,21 +31,21 @@ namespace GunsGunsGuns.Projectiles
             var ctl = Controller();
             if (ctl == null) return false;
 
-            var savedPort   = ctl.rca;
-            var savedWeapon = ctl.rcf;
+            var savedPort   = ctl.m_shellEjectionPoint;
+            var savedWeapon = ctl.m_weaponTransform;
             float savedMinF = ctl.m_minForce,  savedMaxF = ctl.m_maxForce;
             float savedMinT = ctl.m_minTorque, savedMaxT = ctl.m_maxTorque;
 
             try
             {
-                ctl.rca = port;
-                ctl.rcf = port;
+                ctl.m_shellEjectionPoint = port;
+                ctl.m_weaponTransform = port;
                 ctl.m_minForce  = p.ShellForce * 0.7f;
                 ctl.m_maxForce  = p.ShellForce * 1.3f;
                 ctl.m_minTorque = p.ShellSpin  * 0.6f;
                 ctl.m_maxTorque = p.ShellSpin  * 1.4f;
 
-                ctl.gei();
+                ctl.EjectInternal();
                 return true;
             }
             catch (Exception e)
@@ -59,14 +59,14 @@ namespace GunsGunsGuns.Projectiles
             }
             finally
             {
-                ctl.rca = savedPort;
-                ctl.rcf = savedWeapon;
+                ctl.m_shellEjectionPoint = savedPort;
+                ctl.m_weaponTransform = savedWeapon;
                 ctl.m_minForce  = savedMinF;  ctl.m_maxForce  = savedMaxF;
                 ctl.m_minTorque = savedMinT;  ctl.m_maxTorque = savedMaxT;
             }
         }
 
-        private static ShellsEjectionController Controller()
+        private static ShellEjector Controller()
         {
             if (_nativeFailed) return null;
             if (_ctl != null) return _ctl;
@@ -74,8 +74,8 @@ namespace GunsGunsGuns.Projectiles
             if (Time.time < _nextLookup) return null;
             _nextLookup = Time.time + 2f;
 
-            _ctl = UnityEngine.Object.FindObjectOfType<ShellsEjectionController>(true);
-            if (_ctl != null && _ctl.rbz == null)
+            _ctl = FruitLib.FruitScene.First<ShellEjector>();
+            if (_ctl != null && _ctl.m_weaponVelocity == null)
             {
                 // Never initialised, so EjectInternal has no velocity source to read.
                 _ctl = null;

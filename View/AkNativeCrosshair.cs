@@ -79,7 +79,7 @@ namespace GunsGunsGuns.View
             _pollCountdown = 30;
 
             // ToolbarView is unique to the HUD canvas — find it and walk up.
-            var toolbar = Object.FindObjectOfType<ToolbarView>(true);
+            var toolbar = FruitLib.FruitScene.First<ToolbarView>();
             var canvas  = toolbar != null ? toolbar.GetComponentInParent<Canvas>() : null;
             if (canvas == null) return false;
 

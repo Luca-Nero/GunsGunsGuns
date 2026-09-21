@@ -70,6 +70,14 @@ namespace GunsGunsGuns.Core
                 try { b.ProfileField.SetValue(b.Profile, b.ConfigField.GetValue(null)); }
                 catch (Exception e) { MelonLogger.Warning($"[AK] apply {b.ConfigField.Name}: {e.Message}"); }
             }
+
+            // Push the result into each weapon's FruitBallistics spec, so the next shot - and
+            // any round of that weapon still in flight - uses what the menu now says.
+            foreach (var p in Profiles.All)
+            {
+                try { p?.SyncSpec(Config.ExternalForces); }
+                catch (Exception e) { MelonLogger.Warning($"[AK] spec sync {p?.Name}: {e.Message}"); }
+            }
         }
     }
 }

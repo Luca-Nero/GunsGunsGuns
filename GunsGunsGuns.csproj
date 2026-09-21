@@ -3,6 +3,20 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <Nullable>disable</Nullable>
+    <AssemblyName>GunsGunsGuns</AssemblyName>
+    <RootNamespace>GunsGunsGuns</RootNamespace>
+    <LangVersion>latest</LangVersion>
+
+    <!-- MSB3277 = assembly version unification conflicts, ~47 of them, from
+         referencing MelonLoader's net6 assemblies out of a netstandard2.1 project.
+         Nothing to fix; the loader resolves everything itself at runtime. Demoted
+         so that a warning about THIS mod's code is visible instead of buried.
+         Same reasoning as 9_Rewind and 10_Link.
+
+         MSB3270 = the same thing wearing a different hat: MelonLoader is AMD64 and
+         this project is MSIL. That is the only shape a MelonLoader mod can take, since
+         the loader is what picks the process. -->
+    <MSBuildWarningsAsMessages>MSB3277;MSB3270</MSBuildWarningsAsMessages>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,8 +41,37 @@
     <EmbeddedResource Include="Models\RM870Bolt_and_ForeEnd_mesh.json" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(CI)' != 'true'">
-    <Exec Command="copy &quot;$(TargetPath)&quot; &quot;D:\SteamLibrary\steamapps\common\FRUKT Demo\Mods&quot;" />
+  <!-- Deploy to EVERY 0.14 instance, same sweep as 10_Link and 5_FruitLib: an
+       instance is anything with a FRUKT.exe in it, found at any depth, with Mods
+       as its sibling. Pre-0.14 builds are excluded by name - this build binds
+       0.14-only types and cannot load on them.
+
+       Build FruitLib first. It is referenced out of ModRefs, which is where
+       FruitLib's own PostBuild puts it.
+       
+       Addendum by User: Switching to newest release build 0.16A. Has been released via Steam so back to that folder. 
+       Furthermore after a PC rebuild everything dev reladted now lives in E:.
+       Merging Modrefs back to the main folder and repo-->
+  <PropertyGroup>
+    <FruktBuildsRoot Condition="'$(FruktBuildsRoot)' == ''">D:\SteamLibrary\steamapps\common</FruktBuildsRoot>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FruktInstance Include="$(FruktBuildsRoot)\**\FRUKT.exe"
+                   Exclude="$(FruktBuildsRoot)\Frukt0_11\**\FRUKT.exe;
+                            $(FruktBuildsRoot)\Frukt0_12\**\FRUKT.exe;
+                            $(FruktBuildsRoot)\Frukt0_13\**\FRUKT.exe" />
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Error Condition="'@(FruktInstance)' == ''"
+           Text="No FRUKT instance found under '$(FruktBuildsRoot)'. Expected at least one FRUKT.exe. Set FruktBuildsRoot if the builds live elsewhere." />
+
+    <Copy SourceFiles="$(TargetPath)"
+          DestinationFolder="%(FruktInstance.RootDir)%(FruktInstance.Directory)Mods" />
+
+    <Message Importance="high"
+             Text="GunsGunsGuns -&gt; %(FruktInstance.RootDir)%(FruktInstance.Directory)Mods" />
   </Target>
 
 </Project>

@@ -135,7 +135,7 @@ namespace GunsGunsGuns.View
             if (!_reported)
             {
                 _reported = true;
-                var c = UnityEngine.Object.FindObjectsOfType<SelectedItemPivotSwayController>(true);
+                var c = UnityEngine.Object.FindObjectsOfType<SelectedItemPivotSwayBehaviour>(true);
                 MelonLogger.Msg($"[AK] sway: {_sways.Length} rotation component(s), " +
                                 $"{(c != null ? c.Length : 0)} controller(s), " +
                                 $"first rot={_rot0[0]:F3} pos={_pos0[0]:F3}");

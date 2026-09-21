@@ -1,15 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using Il2Cpp;
-using Il2CppEffectors;
-using Il2CppEffectors.ReceiveMethods.Index;
-using Il2CppInterop.Runtime;
-using Il2CppInterop.Runtime.InteropTypes.Arrays;
-using Il2CppLVA.Organs.EffectorsPerception.Collectors;
 using Il2CppPlayer.Cam;
-using Il2CppInfrastructure.Project.Installers.AssetsHandlers.SFX;
+using Il2CppPlayer.Cam.Shake;
+using Il2CppInfrastructure.Project.AssetsHandlers.SFX;
 using Il2CppSpawnables.Weapons;
-using Il2CppVoxelMeshGeneration;
 using MelonLoader;
 using UnityEngine;
 using GunsGunsGuns.Projectiles;
@@ -111,7 +105,7 @@ namespace GunsGunsGuns.Core
 
         private static void Shoot()
         {
-            var cam = Camera.main != null ? Camera.main : UnityEngine.Object.FindObjectOfType<Camera>();
+            var cam = Camera.main != null ? Camera.main : FruitLib.FruitScene.First<Camera>();
             if (cam == null) return;
 
             var t = cam.transform;
@@ -146,8 +140,14 @@ namespace GunsGunsGuns.Core
 
             float spread = p.SpreadDegrees * Mathf.Lerp(1f, p.AdsSpread, AkAds.Blend);
 
+            // Each pellet is its own command. Scatter is decided here, before the command, so a
+            // networked shot reproduces exactly: only the spec id, origin, direction and seed
+            // travel. A null return means something (a multiplayer client) took the shot over.
             for (int i = 0; i < Mathf.Max(1, p.Pellets); i++)
-                AkProjectiles.Spawn(origin, Scatter(dir, spread), p);
+            {
+                var round = FruitLib.FruitBallistics.SpawnProjectile(p.SpecId, origin, Scatter(dir, spread));
+                if (round != null) round.Tag = p;
+            }
         }
 
   
@@ -208,11 +208,11 @@ namespace GunsGunsGuns.Core
             if (p.ShakeAmount <= 0f) return;
 
             if (_shakeService == null)
-                _shakeService = UnityEngine.Object.FindObjectOfType<PlayerCameraShakeService>(true);
+                _shakeService = FruitLib.FruitScene.First<PlayerCameraShakeService>();
 
             if (_shakeService == null) return;
 
-            try { _shakeService.fug(p.ShakeAmount * Mathf.Lerp(1f, p.AdsShake, AkAds.Blend)); }
+            try { _shakeService.PlayCameraShake(p.ShakeAmount * Mathf.Lerp(1f, p.AdsShake, AkAds.Blend)); }
             catch (Exception e) { MelonLogger.Warning($"[AK] camera shake failed: {e.Message}"); }
         }
 
@@ -254,15 +254,12 @@ namespace GunsGunsGuns.Core
 
             _clip = FruitLib.FruitSfx.Weapon(WeaponSFXType.Shoot9MM);
 
-            // Fallbacks, in case the service isn't up yet.
-            if (_clip == null)
-                foreach (var g in Resources.FindObjectsOfTypeAll<Glock17>())
-                {
-                    if (g == null || g.m_shootSoundClip == null) continue;
-                    _clip = g.m_shootSoundClip;
-                    break;
-                }
-
+            // Fallback, in case the service isn't up yet.
+            //
+            // There used to be a second one above this: borrow m_shootSoundClip off any
+            // Viper17 in the scene. The Steam demo build took the clip off the weapon - a
+            // Viper17 now only names its sound (ShootSFX, a WeaponSFXType) and leaves the
+            // SFX service to resolve it, so there is no clip on it left to borrow.
             if (_clip == null)
                 foreach (var c in Resources.FindObjectsOfTypeAll<AudioClip>())
                 {
@@ -308,109 +305,6 @@ namespace GunsGunsGuns.Core
             GUI.DrawTexture(new Rect(cx - th * 0.5f,  cy + gap,       th, len), Texture2D.whiteTexture);
 
             GUI.color = prev;
-        }
-    }
-
-    // ── Wound application ────────────────────────────────────────────────────────
-
-    internal static class AkHitscan
-    {
-        public static bool IsLimb(GameObject obj) =>
-            obj.GetComponentInParent(Il2CppType.Of<LimbEffectorReceiver>()) != null;
-
-        /// <summary>Wound + shove a single limb the round has reached.</summary>
-        public static void ApplyToLimb(RaycastHit hit, Vector3 dir, WeaponProfile p, float energy)
-        {
-            try
-            {
-                if (hit.collider == null) return;
-
-                float depthScale = p.DepthScale * energy;
-                if (depthScale < Config.MinDepth) return;   // round is spent
-
-                var rb = hit.collider.GetComponentInParent<Rigidbody>();
-                if (rb == null) return;
-
-                ApplyCone(hit.point, dir, hit.collider.gameObject, p, depthScale, 1f);
-                ApplyImpulse(rb, hit.point, dir, p, energy);
-            }
-            catch (Exception e) { MelonLogger.Warning($"[AK] wound error: {e.Message}"); }
-        }
-
-        private static void ApplyImpulse(Rigidbody rb, Vector3 point, Vector3 dir, WeaponProfile p, float energy)
-        {
-            try
-            {
-                rb.AddForceAtPosition(dir.normalized * (p.ImpactImpulse * energy),
-                                      point, ForceMode.Impulse);
-
-                if (p.ImpactTorque > 0f)
-                    rb.AddTorque(UnityEngine.Random.insideUnitSphere * (p.ImpactTorque * energy),
-                                 ForceMode.Impulse);
-            }
-            catch (Exception e) { MelonLogger.Warning($"[AK] impulse failed: {e.Message}"); }
-        }
-
-        private static void ApplyCone(Vector3 entryPos, Vector3 dir, GameObject hitObject,
-                                      WeaponProfile p, float depthScale, float radiusScale)
-        {
-            var rb = hitObject.GetComponentInParent<Rigidbody>();
-            if (rb == null) return;
-
-            var birComp = rb.GetComponent(Il2CppType.Of<bir>());
-            if (birComp == null) return;
-
-            var receiverBiw = birComp.TryCast<biw>();
-            if (receiverBiw == null) return;
-
-            var lerComp = hitObject.GetComponentInParent(Il2CppType.Of<LimbEffectorReceiver>());
-            if (lerComp == null) return;
-            var limb = lerComp.TryCast<LimbEffectorReceiver>();
-            if (limb == null) return;
-
-            var voxelMesh = limb.wtb;
-            if (voxelMesh == null) return;
-
-            float r0 = p.EntryWound * radiusScale;
-            float r1 = p.ExitWound * radiusScale;
-            int stride = Mathf.Max(1, Config.ConeStep);
-
-            int n = 0;
-            for (int s = 0; s < Config.ConeMaxSteps; s++)
-            {
-                if (ct.diz(voxelMesh, entryPos, dir, s * stride) == null) break;
-                n++;
-            }
-            if (n == 0) return;
-
-            int totalVoxels = 0;
-            var sets = new List<Il2CppStructArray<Vector3Int>>();
-
-            for (int s = 0; s < n; s++)
-            {
-                var chunk = ct.diz(voxelMesh, entryPos, dir, s * stride);
-                if (chunk == null) break;
-
-                float t      = n > 1 ? s / (float)(n - 1) : 0f;
-                int   radius = Mathf.Max(0, Mathf.RoundToInt(Mathf.Lerp(r0, r1, t)));
-
-                var voxels = new dh(chunk.pla, radius).dki();
-                if (voxels == null || voxels.Length == 0) continue;
-
-                sets.Add(voxels);
-                totalVoxels += voxels.Length;
-            }
-
-            if (totalVoxels == 0) return;
-
-            float signal = -10000f * depthScale;
-            var builder = new bjd(totalVoxels, false);
-            foreach (var voxels in sets)
-                foreach (var v in voxels)
-                    builder.jbq(new IndexEffectorSignal(fp.ecz(v), signal, InfluenceProcessType.Sum));
-
-            receiverBiw.cyn(new bjb<bit>(builder));
-            builder.Dispose();
         }
     }
 }

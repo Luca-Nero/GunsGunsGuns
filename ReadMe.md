@@ -1,7 +1,7 @@
 # GunsGunsGuns!
 
 ![Version](https://img.shields.io/github/v/release/Luca-Nero/GunsGunsGuns?style=flat-square)
-![Game Version](https://img.shields.io/badge/Game-v0.1%2B-blue?style=flat-square)
+![Game Version](https://img.shields.io/badge/Game-v0.14%2B-blue?style=flat-square)
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-Donate-ff5e5b?style=flat-square&logo=ko-fi&logoColor=white)](https://ko-fi.com/Luca_Nero)
 
 Adds a bunch new guns! An AK-47, a pump shotgun and an anti-materiel rifle, cycled with the mouse wheel. Nothing here is a re-skinned game weapon: the rounds travel, ricochet, punch through Bob and throw brass, the models are held and animated in code, and the sniper's scope is a live picture-in-picture render rather than a zoom trick.
@@ -34,7 +34,7 @@ Adds a bunch new guns! An AK-47, a pump shotgun and an anti-materiel rifle, cycl
 
 ## Requirements & Compatibility
 
-- **Prerequisites:** MelonLoader 0.7.2+ Installation. [Check out their Tutorial!](https://melonwiki.xyz/#/) and the latest [FruitLib](https://github.com/Luca-Nero/FruitLib) in your `Mods/` folder - GunsGunsGuns will not start without it.
+- **Prerequisites:** MelonLoader 0.7.2+ Installation. [Check out their Tutorial!](https://melonwiki.xyz/#/) and [FruitLib](https://github.com/Luca-Nero/FruitLib) **3.0.0 or newer** in your `Mods/` folder - GunsGunsGuns will not start without it. FruitLib 2.x is the 0.1 build and will not load on 0.14.
 - **Optional:** [Singularity](https://github.com/Luca-Nero/Singularity) - its gravity wells will bend rounds in flight.
 - **Compatibility:** No known Incompatabilities. Explosion effects from BombsAway may briefly override the aimed field of view.
 

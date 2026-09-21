@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using FruitLib;
 using GunsGunsGuns.Core;
-using Il2CppInfrastructure.Project.Installers.AssetsHandlers.SFX;
+using Il2CppInfrastructure.Project.AssetsHandlers.SFX;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -21,6 +21,36 @@ namespace GunsGunsGuns.Projectiles
 
         private static readonly List<Mark> _marks = new List<Mark>();
         private static Shader _shader;
+
+        // ── FruitLib hook-up ──────────────────────────────────────────────────
+        //
+        // FruitBallistics decides what a round hits and what happens to it; this mod decides
+        // what that looks and sounds like - for its own rounds only.
+
+        private static bool _hooked;
+
+        public static void Init()
+        {
+            if (_hooked) return;
+            _hooked = true;
+            FruitBallistics.SurfaceHit  += OnSurface;
+            FruitBallistics.LimbWounded += OnWound;
+        }
+
+        private static void OnSurface(SurfaceHitInfo h)
+        {
+            if (AkProjectiles.ProfileOf(h.Projectile) == null) return;
+
+            Spawn(h.Point, h.Normal, h.Direction, h.Incidence, Mathf.Clamp01(h.PowerRatio));
+            if (h.Ricocheted) PlaySkid(h.Point);
+            else              PlayHard(h.Point);
+        }
+
+        private static void OnWound(WoundInfo w)
+        {
+            if (AkProjectiles.ProfileOf(w.Projectile) == null) return;
+            PlayFlesh(w.Entry);
+        }
 
         // ── Sound ─────────────────────────────────────────────────────────────────
 

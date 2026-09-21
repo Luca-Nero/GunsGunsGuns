@@ -17,32 +17,84 @@ namespace GunsGunsGuns.Core
         public int   Pellets       = 1;     // >1 makes it a shotgun
         public float SpreadDegrees = 0f;    // cone half-angle per pellet
 
-        // ── Ballistics ────────────────────────────────────────────────────────
-        public float MuzzleVelocity = 220f;
-        public float RoundGravity   = -9.81f;
-        public float RoundLifetime  = 4f;
+        // ── Round ─────────────────────────────────────────────────────────────
+        // Flight, penetration and wounding are FruitLib's (FruitBallistics), driven by the
+        // game's own wound model. What a weapon decides is what it fires: a real bullet's
+        // mass, calibre, speed and drag. Power in tissue follows from its energy, so there is
+        // no separate damage number to balance.
+        public float BulletMassGrams = 7.9f;
+        public float CaliberMm       = 7.62f;
+        public float MuzzleVelocity  = 715f;
+        public float DragCoefficient = 0.29f;
+        public float GravityScale    = 1f;
+        public float RoundLifetime   = 4f;
 
         // ── Impact ────────────────────────────────────────────────────────────
-        public float ImpactImpulse = 140f;
-        public float ImpactTorque  = 5f;
-        public float WorldImpulse  = 40f;
+        public float ImpactImpulse = 65f;    // N·s on a struck limb at full power
+        public float WorldImpulse  = 10f;    // N·s on anything else
 
-        // ── Penetration ───────────────────────────────────────────────────────
-        public int   MaxPenetrations     = 3;
-        public float PenetrationLoss     = 0.35f;
-        public float MaxPenetrationDepth = 0.8f;
-        public float PenetrationDeflect  = 3f;
+        // ── Wound (voxel steps, ~23 mm each) ──────────────────────────────────
+        /// <summary>The wound track's "neck": tissue crossed before the round yaws and the
+        /// temporary cavity opens.</summary>
+        public int   CleanEntryDepth      = 2;
+        public float SpreadChance         = 0.5f;
+        public int   CavitationPeakRadius = 4;
+        public float CavitationDamage     = -350f;
+        public float TearMinRadius        = 1.5f;
+        public float TearMaxRadius        = 3f;
+        public float ExitTearDamage       = -350f;
+        public int   MaxDepth             = 80;
+        /// <summary>1 = the game's bone, which stops a 7.62 in a thigh. 0.1 lets real rounds
+        /// through bone the way they go through it in life.</summary>
+        public float HardTissueScale      = 0.1f;
+        public float PenetrationDeflect   = 1f;
 
         // ── Ricochet ──────────────────────────────────────────────────────────
-        public float RicochetAngle      = 65f;
-        public int   MaxBounces         = 3;
-        public float RicochetEnergyLoss = 0.35f;
-        public float RicochetScatter    = 4f;
+        public float RicochetAngle      = 70f;
+        public int   MaxBounces         = 1;
+        public float RicochetEnergyLoss = 0.5f;
+        public float RicochetScatter    = 3f;
 
-        // ── Wound ─────────────────────────────────────────────────────────────
-        public float DepthScale  = 1f;
-        public float EntryWound = 1f;
-        public float ExitWound = 3f;
+        /// <summary>The FruitLib spec this weapon fires, kept in step with the fields above by
+        /// <see cref="SyncSpec"/>. Registered as "GunsGunsGuns." + Key.</summary>
+        public FruitLib.ProjectileSpec Spec { get; private set; }
+
+        public string SpecId => "GunsGunsGuns." + (Key ?? Name);
+
+        /// <summary>Copies the tunables into the spec and (re)registers it. Mutating the same
+        /// object keeps any round already in flight consistent with what it was fired as.</summary>
+        public void SyncSpec(bool externalForces)
+        {
+            Spec ??= new FruitLib.ProjectileSpec { Id = SpecId };
+            var s = Spec;
+            s.MassGrams          = BulletMassGrams;
+            s.CaliberMm          = CaliberMm;
+            s.MuzzleVelocity     = MuzzleVelocity;
+            s.DragCoefficient    = DragCoefficient;
+            s.GravityScale       = GravityScale;
+            s.Lifetime           = RoundLifetime;
+            s.ExternalForces     = externalForces;
+            s.WorldImpulse       = WorldImpulse;
+            s.PenetrationDeflect = PenetrationDeflect;
+            s.RicochetAngle      = RicochetAngle;
+            s.MaxBounces         = MaxBounces;
+            s.RicochetEnergyLoss = RicochetEnergyLoss;
+            s.RicochetScatter    = RicochetScatter;
+
+            var w = s.Wound;
+            w.CleanEntryDepth      = CleanEntryDepth;
+            w.SpreadChance         = SpreadChance;
+            w.CavitationPeakRadius = CavitationPeakRadius;
+            w.CavitationDamage     = CavitationDamage;
+            w.TearMinRadius        = TearMinRadius;
+            w.TearMaxRadius        = TearMaxRadius;
+            w.ExitTearDamage       = ExitTearDamage;
+            w.MaxDepth             = MaxDepth;
+            w.HardTissueScale      = HardTissueScale;
+            w.ImpactImpulse        = ImpactImpulse;
+
+            FruitLib.FruitBallistics.Register(s);
+        }
 
         // ── Model ─────────────────────────────────────────────────────────────
         public string  BodyMesh   = null;
@@ -111,11 +163,15 @@ namespace GunsGunsGuns.Core
                 Name = "AK-47", Key = "AK", IconColor = new Color(0.85f, 0.55f, 0.15f),
                 // ──── Firing ────────────────────────────────────────────────────────
                 FireRateRPM = 600f, Pellets = 1, SpreadDegrees = 0.2f,
-                MuzzleVelocity = 220f, RoundLifetime = 2.5f,
-                ImpactImpulse = 30f, ImpactTorque = 6f, WorldImpulse = 10f,
-                MaxPenetrations = 3, PenetrationLoss = 0.35f, MaxPenetrationDepth = 0.8f, PenetrationDeflect = 1f,
+                // ──── Round: 7.62x39 M43 ball, 7.9 g at 715 m/s (~15100 power) ────────
+                BulletMassGrams = 7.9f, CaliberMm = 7.62f, MuzzleVelocity = 715f, DragCoefficient = 0.29f,
+                RoundLifetime = 2.5f, ImpactImpulse = 30f, WorldImpulse = 10f,
+                // M43 is famously stable: it travels ~26 cm of tissue before it yaws, so the
+                // cavity opens late and a torso shot is often a clean through-and-through.
+                CleanEntryDepth = 11, SpreadChance = 0.5f, CavitationPeakRadius = 4, CavitationDamage = -350f,
+                TearMinRadius = 1.5f, TearMaxRadius = 3f, ExitTearDamage = -350f, MaxDepth = 80,
+                HardTissueScale = 0.1f, PenetrationDeflect = 1f,
                 RicochetAngle = 65f, MaxBounces = 1, RicochetEnergyLoss = 0.6f,
-                DepthScale = 1f, EntryWound = 1f, ExitWound = 3f,
                 // ──── View and recoil ───────────────────────────────────────────────
                 ShakeAmount = 0.05f, ShotPitch = 0.65f, TracerSize = 0.04f,
                 RecoilKick = 0.01f, RecoilRise = 0.5f, RecoilRock = 0.5f,
@@ -144,11 +200,18 @@ namespace GunsGunsGuns.Core
                 Name = "RM870", Key = "RM870", IconColor = new Color(0.75f, 0.2f, 0.2f),
                 // ──── Firing ────────────────────────────────────────────────────────
                 FireRateRPM = 30f, Pellets = 12, SpreadDegrees = 4.5f,
-                MuzzleVelocity = 300f, RoundLifetime = 2.5f,
-                ImpactImpulse = 30f, ImpactTorque = 6f, WorldImpulse = 10f,
-                MaxPenetrations = 1, PenetrationLoss = 0.75f, MaxPenetrationDepth = 0.3f, PenetrationDeflect = 2f,
+                // ──── Round: 00 buckshot, per pellet 3.5 g, 8.4 mm at 400 m/s (~2100 power) ──
+                // (A real 2¾" 00 shell holds 9 pellets; 12 is this weapon's choice.)
+                BulletMassGrams = 3.5f, CaliberMm = 8.4f, MuzzleVelocity = 400f, DragCoefficient = 0.47f,
+                RoundLifetime = 2.5f, ImpactImpulse = 30f, WorldImpulse = 10f,
+                // Round balls do not yaw: no neck, no temporary cavity worth the name - just
+                // many short, ragged crush channels.
+                CleanEntryDepth = 0, SpreadChance = 0.2f, CavitationPeakRadius = 0, CavitationDamage = 0f,
+                TearMinRadius = 0.5f, TearMaxRadius = 1.5f, ExitTearDamage = -250f, MaxDepth = 30,
+                // Soft lead balls flatten on bone rather than punch through it, so bone keeps
+                // its full native toughness here - unlike the jacketed rifle rounds.
+                HardTissueScale = 1f, PenetrationDeflect = 2f,
                 RicochetAngle = 72f, MaxBounces = 1, RicochetEnergyLoss = 0.6f,
-                DepthScale = 0.55f, EntryWound = 1f, ExitWound = 2f,
                 // ──── View and recoil ───────────────────────────────────────────────
                 ShakeAmount = 0.55f, ShotPitch = 0.45f, TracerSize = 0.03f,
                 BoltBackTime = 0.12f, BoltDwell = 0.2f, BoltCycleTime = 0.25f, CycleDelay = 0.25f,
@@ -176,11 +239,15 @@ namespace GunsGunsGuns.Core
                 Name = "AS50", Key = "AS50", IconColor = new Color(0.35f, 0.75f, 0.95f),
                 // ──── Firing ────────────────────────────────────────────────────────
                 FireRateRPM = 35f, Pellets = 1, SpreadDegrees = 0f,
-                MuzzleVelocity = 800f, RoundGravity = -6f, RoundLifetime = 12f,
-                ImpactImpulse = 600f, ImpactTorque = 14f, WorldImpulse = 400f,
-                MaxPenetrations = 12, PenetrationLoss = 0.12f, MaxPenetrationDepth = 2.5f, PenetrationDeflect = 1f,
+                // ──── Round: .50 BMG M33 ball, 42 g at 850 m/s (~114000 power) ─────────
+                // The old -6 gravity was standing in for a flat trajectory; real speed and a
+                // real drag figure give it one honestly.
+                BulletMassGrams = 42f, CaliberMm = 12.7f, MuzzleVelocity = 850f, DragCoefficient = 0.26f,
+                RoundLifetime = 12f, ImpactImpulse = 600f, WorldImpulse = 400f,
+                CleanEntryDepth = 4, SpreadChance = 0.6f, CavitationPeakRadius = 7, CavitationDamage = -500f,
+                TearMinRadius = 2.5f, TearMaxRadius = 5f, ExitTearDamage = -500f, MaxDepth = 200,
+                HardTissueScale = 0.1f, PenetrationDeflect = 1f,
                 RicochetAngle = 78f, MaxBounces = 2, RicochetEnergyLoss = 0.25f,
-                DepthScale = 2.4f, EntryWound = 2f, ExitWound = 4f,
                 // ──── View and recoil ───────────────────────────────────────────────
                 ShakeAmount = 0.9f, ShotPitch = 0.32f, TracerSize = 0.07f,
                 BoltBackTime = 0.05f, BoltCycleTime = 0.12f,

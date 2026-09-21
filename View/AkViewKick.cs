@@ -132,7 +132,7 @@ namespace GunsGunsGuns.View
                 if (Time.time < _nextLookup) return null;
                 _nextLookup = Time.time + 2f;
 
-                _svc = UnityEngine.Object.FindObjectOfType<PlayerCameraService>(true);
+                _svc = FruitLib.FruitScene.First<PlayerCameraService>();
                 if (_svc == null) return null;
             }
 
