@@ -12,6 +12,16 @@ namespace GunsGunsGuns.Core
         /// Leave it null and the weapon simply has no live tunables. See WeaponTuning.</summary>
         public string Key       = null;
 
+        // ── Inventory card ────────────────────────────────────────────────────
+        // What the game's inventory window shows for this weapon, laid out like a native
+        // one (LYNX-F: caliber / fire mode / rate, then flavor text).
+        public string Caliber     = null;          // card label; null = CaliberMm as "7.62 mm"
+        public string FireMode    = "automatic";
+        public string Description = "";
+
+        public string CaliberLabel => !string.IsNullOrEmpty(Caliber) ? Caliber : $"{CaliberMm:0.##} mm";
+        public string RateLabel    => $"{FireRateRPM:0} rounds per minute";
+
         // ── Firing ────────────────────────────────────────────────────────────
         public float FireRateRPM   = 600f;
         public int   Pellets       = 1;     // >1 makes it a shotgun
@@ -161,6 +171,8 @@ namespace GunsGunsGuns.Core
             new WeaponProfile
             {
                 Name = "AK-47", Key = "AK", IconColor = new Color(0.85f, 0.55f, 0.15f),
+                FireMode = "automatic",
+                Description = "Full-auto assault rifle. Tight cone, and its rounds punch through up to three surfaces.",
                 // ──── Firing ────────────────────────────────────────────────────────
                 FireRateRPM = 600f, Pellets = 1, SpreadDegrees = 0.2f,
                 // ──── Round: 7.62x39 M43 ball, 7.9 g at 715 m/s (~15100 power) ────────
@@ -198,6 +210,8 @@ namespace GunsGunsGuns.Core
             new WeaponProfile
             {
                 Name = "RM870", Key = "RM870", IconColor = new Color(0.75f, 0.2f, 0.2f),
+                Caliber = "12 gauge", FireMode = "pump-action",
+                Description = "Pump shotgun. Wide spread and a heavy shove per pellet, but barely any penetration. Racks after the shot.",
                 // ──── Firing ────────────────────────────────────────────────────────
                 FireRateRPM = 30f, Pellets = 12, SpreadDegrees = 4.5f,
                 // ──── Round: 00 buckshot, per pellet 3.5 g, 8.4 mm at 400 m/s (~2100 power) ──
@@ -237,6 +251,8 @@ namespace GunsGunsGuns.Core
             new WeaponProfile
             {
                 Name = "AS50", Key = "AS50", IconColor = new Color(0.35f, 0.75f, 0.95f),
+                FireMode = "semi-automatic",
+                Description = "Anti-materiel rifle with a live scope. Hold Mouse 4 while aimed to hold your breath.",
                 // ──── Firing ────────────────────────────────────────────────────────
                 FireRateRPM = 35f, Pellets = 1, SpreadDegrees = 0f,
                 // ──── Round: .50 BMG M33 ball, 42 g at 850 m/s (~114000 power) ─────────
@@ -278,11 +294,11 @@ namespace GunsGunsGuns.Core
         private static int _index;
 
         public static WeaponProfile Current => All[Mathf.Clamp(_index, 0, All.Count - 1)];
-        public static WeaponProfile Cycle(int direction)
+        /// <summary>Makes <paramref name="p"/> the weapon everything else reads as Current.</summary>
+        public static void Select(WeaponProfile p)
         {
-            if (All.Count == 0) return null;
-            _index = ((_index + direction) % All.Count + All.Count) % All.Count;
-            return Current;
+            int i = All.IndexOf(p);
+            if (i >= 0) _index = i;
         }
     }
 }

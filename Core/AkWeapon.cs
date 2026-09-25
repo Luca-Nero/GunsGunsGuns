@@ -16,26 +16,50 @@ namespace GunsGunsGuns.Core
         private static bool  _active;
         private static float _fireTimer;
 
-        public static void OnSelected(int idx)
+        /// <summary>The weapon in hand, or null. Each gun is its own inventory item now.</summary>
+        private static WeaponProfile _held;
+
+        public static void OnSelected(WeaponProfile p, int slot)
         {
+            // Switching straight from one gun to another can deliver the new gun's select
+            // before the old one's deselect. Selecting over a held gun is therefore a swap:
+            // AkModel sees Current change and rebuilds the rig for the new parts.
+            bool swap = _active;
+            FruitLib.FruitTrace.Mark($"[GGG] OnSelected {p.Name} slot {slot} (swap={swap})");
+
+            Profiles.Select(p);
+            _held      = p;
             _active    = true;
-            _fireTimer = 0f;   // first click fires immediately
-            AkModel.RequestSpawn();
-            AkNativeCrosshair.Suppress(true);
-            Dbg.Log($"[AK] equipped (slot {idx})");
+            _fireTimer = 0f;   // first click fires immediately, and no cadence carries over
+
+            if (!swap)
+            {
+                AkModel.RequestSpawn();
+                FruitLib.FruitTrace.Mark("[GGG] OnSelected: spawn requested, suppressing crosshair");
+                AkNativeCrosshair.Suppress(true);
+                FruitLib.FruitTrace.Mark("[GGG] OnSelected: crosshair suppressed");
+            }
+            Dbg.Log($"[AK] equipped {p.Name} (slot {slot}){(swap ? " over another gun" : "")}");
         }
 
-        public static void OnDeselected(int idx)
+        public static void OnDeselected(WeaponProfile p, int slot)
         {
+            // The late deselect of the gun just swapped out: the new one is already in hand.
+            if (!ReferenceEquals(_held, p)) return;
+
+            _held   = null;
             _active = false;
             AkModel.Despawn();
+            FruitLib.FruitTrace.Mark("[GGG] OnDeselected: restoring crosshair");
             AkNativeCrosshair.Suppress(false);
-            Dbg.Log($"[AK] holstered (slot {idx})");
+            FruitLib.FruitTrace.Mark("[GGG] OnDeselected: done");
+            Dbg.Log($"[AK] holstered {p.Name} (slot {slot})");
         }
 
         public static void OnSceneReload()
         {
             _active       = false;
+            _held         = null;
             _fireTimer    = 0f;
             _cycleAt      = 0f;
             AkAds.Reset();
@@ -72,8 +96,6 @@ namespace GunsGunsGuns.Core
 
             if (FruitLib.FruitMenu.BlocksGameplayInput) { _fireTimer = 0f; return; }
 
-            HandleWeaponSwitch();
-
             if (!Input.GetMouseButton(0)) { _fireTimer = 0f; return; }
 
             float interval = 60f / Mathf.Clamp(Profiles.Current.FireRateRPM, 10f, 3000f);
@@ -85,22 +107,6 @@ namespace GunsGunsGuns.Core
                 Shoot();
                 _fireTimer += interval;
             }
-        }
-
-        // ── Weapon switching ──────────────────────────────────────────────────────
-        public static FruitLib.FruitToolbarItem SlotItem;
-
-        private static void HandleWeaponSwitch()
-        {
-            float scroll = Input.mouseScrollDelta.y;
-            if (Mathf.Abs(scroll) < 0.01f) return;
-
-            var p = Profiles.Cycle(scroll > 0f ? 1 : -1);
-            if (p == null) return;
-
-            _fireTimer = 0f;   // don't carry the old weapon's cadence across the switch
-            SlotItem?.SetDisplay(p.Name, FruitLib.FruitToolbar.MakeSolidIcon(p.IconColor));
-            Dbg.Log($"[AK] switched to {p.Name}");
         }
 
         private static void Shoot()

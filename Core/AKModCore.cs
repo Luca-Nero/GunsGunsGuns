@@ -28,10 +28,13 @@ namespace GunsGunsGuns.Core
         //
         // 3.1.0 = rounds are FruitLib's now (FruitBallistics): real ballistics and the
         // game's own wound model. This mod keeps the guns, the feel, and the visuals.
-        public const string Version = "3.1.0";
-        // FruitLib 3.1.0 is the first with FruitBallistics. Against 3.0.x every shot would
-        // throw a TypeLoadException from inside Shoot, so gate on it up front.
-        private const int LibMajor = 3, LibMinor = 1, LibPatch = 0;
+        //
+        // 4.0.0 = the full release. The toolbar became an inventory, so the three guns are
+        // three Weapons-shelf items with their own cards instead of one slot cycled with the
+        // mouse wheel.
+        public const string Version = "4.0.0";
+        // FruitLib 4.0.0 is the first with FruitInventory and the typed item cards.
+        private const int LibMajor = 4, LibMinor = 0, LibPatch = 0;
         private bool _active;
 
         public override void OnInitializeMelon()
@@ -63,18 +66,24 @@ namespace GunsGunsGuns.Core
 
             AkModel.Meshes = new FruitMeshLibrary(System.Reflection.Assembly.GetExecutingAssembly());
 
-            var start = Profiles.Current;
-            var item = new FruitToolbarItem
+            // One inventory item per gun, on the game's Weapons shelf, with the card a native
+            // weapon has: caliber and fire mode, then rate, then the flavor text.
+            foreach (var profile in Profiles.All)
             {
-                Id = "GunsGunsGuns:Weapons",
-                Name = start.Name,
-                Icon = FruitToolbar.MakeSolidIcon(start.IconColor),
-                OnSelected = AkWeapon.OnSelected,
-                OnDeselected = AkWeapon.OnDeselected,
-            };
-
-            FruitToolbar.Register(item);
-            AkWeapon.SlotItem = item;
+                var p = profile;   // one per closure
+                FruitInventory.AddItem(new FruitItem
+                {
+                    Id           = "GunsGunsGuns:" + (p.Key ?? p.Name),
+                    Name         = p.Name,
+                    Description  = p.Description,
+                    Category     = nameof(FruitItemCategory.Weapon),
+                    Icon         = FruitIcons.Solid(p.IconColor),
+                    OnSelected   = item => AkWeapon.OnSelected(p, item.Slot),
+                    OnDeselected = item => AkWeapon.OnDeselected(p, item.Slot),
+                }
+                .WeaponCard(p.CaliberLabel, p.FireMode)
+                .AddStat("rate", p.RateLabel));
+            }
 
             FruitUpdateCheck.Register("GunsGunsGuns", Version, "Luca-Nero", "GunsGunsGuns");
 
@@ -260,9 +269,7 @@ namespace GunsGunsGuns.Core
     // ── Config Loader (INI) ───────────────────────────────────────────────────────
     internal static class ConfigLoader
     {
-        public static string IniPath => Path.Combine(
-            Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
-            "GGGConfig.ini");
+        public static string IniPath => FruitPaths.Config("GGGConfig.ini", typeof(ConfigLoader).Assembly);
 
         public static void Load()
         {

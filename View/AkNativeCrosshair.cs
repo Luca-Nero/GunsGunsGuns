@@ -53,7 +53,7 @@ namespace GunsGunsGuns.View
 
         public static void Reset()
         {
-            // Scene reload drops the toolbar selection (FruitToolbar.ResetForScene), so the
+            // Scene reload destroys the held inventory item along with the scene, so the
             // weapon is no longer out and the old canvas is gone with the scene.
             _center = null;
             _graphics.Clear();

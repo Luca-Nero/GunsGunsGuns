@@ -35,10 +35,12 @@ namespace GunsGunsGuns.Core
 
         public static void Despawn()
         {
+            FruitLib.FruitTrace.Mark("[GGG] despawn: begin");
             _equipped     = false;
             _spawnPending = false;
             _built        = null;
             Teardown();
+            FruitLib.FruitTrace.Mark("[GGG] despawn: done");
         }
 
         public static void OnSceneReload()
@@ -110,7 +112,9 @@ namespace GunsGunsGuns.Core
             if (string.IsNullOrEmpty(p.BodyMesh)) return;
             if (Meshes == null || Meshes.Count == 0) { MelonLogger.Warning("[AK] no meshes loaded."); return; }
 
+            FruitLib.FruitTrace.Mark($"[GGG] spawn {p.Name}: viewmodel camera");
             AkViewmodel.Ensure(Camera.main);
+            FruitLib.FruitTrace.Mark("[GGG] spawn: viewmodel ok, building parts");
 
             _root = new GameObject("GGG_Weapon");
             _root.transform.SetParent(pivot, false);
@@ -126,10 +130,13 @@ namespace GunsGunsGuns.Core
 
             _muzzle = AddPort("Muzzle", p.MuzzleOffset);
             _port   = AddPort("EjectPort", p.EjectOffset);
+            FruitLib.FruitTrace.Mark("[GGG] spawn: parts ok, attaching scope");
             AkScope.Attach(_root.transform, p);
+            FruitLib.FruitTrace.Mark("[GGG] spawn: scope ok, setting layers");
 
             // Layer last, so it catches every part and port in one pass.
             if (AkViewmodel.Layer >= 0) SetLayerTree(_root.transform, AkViewmodel.Layer);
+            FruitLib.FruitTrace.Mark("[GGG] spawn: done");
 
             MelonLogger.Msg($"[AK] {p.Name} model built under '{pivot.name}' " +
                             $"(body:{_body != null} mag:{_mag != null} bolt:{_bolt != null})");
