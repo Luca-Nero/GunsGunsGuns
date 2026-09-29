@@ -56,18 +56,17 @@
     <FruktBuildsRoot Condition="'$(FruktBuildsRoot)' == ''">D:\SteamLibrary\steamapps\common</FruktBuildsRoot>
   </PropertyGroup>
 
-  <ItemGroup>
-    <FruktInstance Include="$(FruktBuildsRoot)\**\FRUKT.exe"
-                   Exclude="$(FruktBuildsRoot)\Frukt0_11\**\FRUKT.exe;
-                            $(FruktBuildsRoot)\Frukt0_12\**\FRUKT.exe;
-                            $(FruktBuildsRoot)\Frukt0_13\**\FRUKT.exe" />
-  </ItemGroup>
-
   <!-- Deploy is local only. GitHub Actions sets GITHUB_ACTIONS=true and the runner has no FRUKT
        install; SkipDeploy=true skips it by hand (e.g. a scratch build that must not touch
        the live game or ModRefs). -->
   <Target Name="PostBuild" AfterTargets="PostBuildEvent"
           Condition="'$(GITHUB_ACTIONS)' != 'true' And '$(SkipDeploy)' != 'true'">
+    <!-- An install carrying DEPRECATED_DONT_BUILD_AGAINST.md next to its FRUKT.exe (the old Demo) is skipped. -->
+    <ItemGroup>
+      <_FruktExe Include="$(FruktBuildsRoot)\**\FRUKT.exe" />
+      <FruktInstance Include="@(_FruktExe)"
+                     Condition="!Exists('%(RootDir)%(Directory)DEPRECATED_DONT_BUILD_AGAINST.md')" />
+    </ItemGroup>
     <Error Condition="'@(FruktInstance)' == ''"
            Text="No FRUKT instance found under '$(FruktBuildsRoot)'. Expected at least one FRUKT.exe. Set FruktBuildsRoot if the builds live elsewhere." />
 
