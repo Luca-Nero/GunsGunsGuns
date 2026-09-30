@@ -138,7 +138,7 @@ namespace GunsGunsGuns.Core
             if (AkViewmodel.Layer >= 0) SetLayerTree(_root.transform, AkViewmodel.Layer);
             FruitLib.FruitTrace.Mark("[GGG] spawn: done");
 
-            MelonLogger.Msg($"[AK] {p.Name} model built under '{pivot.name}' " +
+            Dbg.Log($"[AK] {p.Name} model built under '{pivot.name}' " +
                             $"(body:{_body != null} mag:{_mag != null} bolt:{_bolt != null})");
         }
 

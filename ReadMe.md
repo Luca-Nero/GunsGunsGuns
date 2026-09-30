@@ -34,7 +34,7 @@ Adds a bunch new guns! An AK-47, a pump shotgun and an anti-materiel rifle, cycl
 
 ## Requirements & Compatibility
 
-- **Prerequisites:** MelonLoader 0.7.2+ Installation. [Check out their Tutorial!](https://melonwiki.xyz/#/) and [FruitLib](https://github.com/Luca-Nero/FruitLib) **3.0.0 or newer** in your `Mods/` folder - GunsGunsGuns will not start without it. FruitLib 2.x is the 0.1 build and will not load on 0.14.
+- **Prerequisites:** MelonLoader 0.7.2+ Installation. [Check out their Tutorial!](https://melonwiki.xyz/#/) and [FruitLib](https://github.com/Luca-Nero/FruitLib) **5.3.0 or newer** in your `Mods/` folder - GunsGunsGuns will not start without it.
 - **Optional:** [Singularity](https://github.com/Luca-Nero/Singularity) - its gravity wells will bend rounds in flight.
 - **Compatibility:** No known Incompatabilities. Explosion effects from BombsAway may briefly override the aimed field of view.
 

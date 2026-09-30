@@ -58,6 +58,9 @@ namespace GunsGunsGuns.Core
         /// through bone the way they go through it in life.</summary>
         public float HardTissueScale      = 0.1f;
         public float PenetrationDeflect   = 1f;
+        /// <summary>How well it goes through walls and props, as a multiple of a full metal
+        /// jacket of the same mass and calibre (FruitLib works out the rest). 0 = never.</summary>
+        public float PenetrationScale     = 1f;
 
         // ── Ricochet ──────────────────────────────────────────────────────────
         public float RicochetAngle      = 70f;
@@ -86,6 +89,7 @@ namespace GunsGunsGuns.Core
             s.ExternalForces     = externalForces;
             s.WorldImpulse       = WorldImpulse;
             s.PenetrationDeflect = PenetrationDeflect;
+            s.PenetrationScale   = PenetrationScale;
             s.RicochetAngle      = RicochetAngle;
             s.MaxBounces         = MaxBounces;
             s.RicochetEnergyLoss = RicochetEnergyLoss;
@@ -225,6 +229,8 @@ namespace GunsGunsGuns.Core
                 // Soft lead balls flatten on bone rather than punch through it, so bone keeps
                 // its full native toughness here - unlike the jacketed rifle rounds.
                 HardTissueScale = 1f, PenetrationDeflect = 2f,
+                // ...and flatten on walls too: lead shot gets about 60% as far as a jacketed ball.
+                PenetrationScale = 0.6f,
                 RicochetAngle = 72f, MaxBounces = 1, RicochetEnergyLoss = 0.6f,
                 // ──── View and recoil ───────────────────────────────────────────────
                 ShakeAmount = 0.55f, ShotPitch = 0.45f, TracerSize = 0.03f,

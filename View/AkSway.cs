@@ -79,7 +79,7 @@ namespace GunsGunsGuns.View
                 _amp0[i]  = found[i].AmplitudeGain;
             }
 
-            MelonLogger.Msg($"[AK] camera noise: {_noise.Length} source(s), first amplitude={_amp0[0]:F3}");
+            Dbg.Log($"[AK] camera noise: {_noise.Length} source(s), first amplitude={_amp0[0]:F3}");
             return _noise;
         }
 
@@ -136,7 +136,7 @@ namespace GunsGunsGuns.View
             {
                 _reported = true;
                 var c = UnityEngine.Object.FindObjectsOfType<SelectedItemPivotSwayBehaviour>(true);
-                MelonLogger.Msg($"[AK] sway: {_sways.Length} rotation component(s), " +
+                Dbg.Log($"[AK] sway: {_sways.Length} rotation component(s), " +
                                 $"{(c != null ? c.Length : 0)} controller(s), " +
                                 $"first rot={_rot0[0]:F3} pos={_pos0[0]:F3}");
             }

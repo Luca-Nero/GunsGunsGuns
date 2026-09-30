@@ -1,4 +1,5 @@
 using System;
+using GunsGunsGuns.Core;
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
@@ -61,7 +62,7 @@ namespace GunsGunsGuns.View
 
                 _cam   = cam;
                 _layer = layer;
-                MelonLogger.Msg($"[AK] viewmodel camera on layer {layer} ('{LayerMask.LayerToName(layer)}').");
+                Dbg.Log($"[AK] viewmodel camera on layer {layer} ('{LayerMask.LayerToName(layer)}').");
             }
             catch (Exception e)
             {

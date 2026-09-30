@@ -117,7 +117,7 @@ namespace GunsGunsGuns.View
             _cam.cullingMask = AkViewmodel.Layer >= 0 ? ~(1 << AkViewmodel.Layer) : ~0;
             _cam.enabled = false;
 
-            MelonLogger.Msg($"[AK] scope camera ready at {size}x{size}.");
+            Dbg.Log($"[AK] scope camera ready at {size}x{size}.");
         }
 
         private static Material LensMaterial()

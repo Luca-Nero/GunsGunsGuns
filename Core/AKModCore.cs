@@ -32,9 +32,9 @@ namespace GunsGunsGuns.Core
         // 4.0.0 = the full release. The toolbar became an inventory, so the three guns are
         // three Weapons-shelf items with their own cards instead of one slot cycled with the
         // mouse wheel.
-        public const string Version = "4.0.0";
-        // FruitLib 4.0.0 is the first with FruitInventory and the typed item cards.
-        private const int LibMajor = 4, LibMinor = 0, LibPatch = 0;
+        public const string Version = "4.0.1";
+        // FruitLib 5.3.0: ProjectileSpec.PenetrationScale (walls). 5.2.0: Register saves through ConfigLoader.Write.
+        private const int LibMajor = 5, LibMinor = 5, LibPatch = 0;
         private bool _active;
 
         public override void OnInitializeMelon()
@@ -54,7 +54,9 @@ namespace GunsGunsGuns.Core
             WeaponTuning.Bind();
             WeaponTuning.Capture();
 
-            FruitMenu.Register("GunsGunsGuns", ConfigLoader.IniPath, typeof(Config));
+            // Before the ini is read, so Reset to Defaults goes back to the code's values.
+            FruitMenu.CaptureDefaults(typeof(Config));
+            FruitMenu.Register("GunsGunsGuns", ConfigLoader.IniPath, typeof(Config), ConfigLoader.Write);
 
             ConfigLoader.Load();
             WeaponTuning.Apply();
@@ -124,11 +126,6 @@ namespace GunsGunsGuns.Core
     {
         // ── Player Facing Configuration ────────────────────────────────────────
 
-        // ── Controls ───────────────────────────────────────────────────────────
-
-        [FruitLib.MenuCategory("Controls")] public static KeyCode HoldBreathKey = KeyCode.Mouse4;
-        [FruitLib.MenuCategory("Controls")] public static bool AdsToggle = false;  // otherwise hold RMB
-
         // ── Per-weapon tunables ───────────────────────────────────────────────
 
         // Values here are placeholders: WeaponTuning.Capture copies each profile's own values in
@@ -139,18 +136,19 @@ namespace GunsGunsGuns.Core
         [MenuCategory("AK-47"), MenuLabel("Fire rate"), MenuRange(0f, 3000f)] public static float AK_FireRateRPM = 600f;
         [FruitLib.MenuCategory("AK-47")] public static float AK_BulletMassGrams = 0f;
         [FruitLib.MenuCategory("AK-47")] public static float AK_MuzzleVelocity = 0f;
-        [FruitLib.MenuCategory("AK-47")] public static float AK_DragCoefficient = 0f;
-        [FruitLib.MenuCategory("AK-47")] public static float AK_RoundLifetime = 0f;
+        public static float AK_DragCoefficient = 0f;
+        public static float AK_RoundLifetime = 0f;
         [FruitLib.MenuCategory("AK-47")] public static float AK_ImpactImpulse = 0f;
         [FruitLib.MenuCategory("AK-47")] public static float AK_WorldImpulse = 0f;
-        [FruitLib.MenuCategory("AK-47")] public static int AK_CleanEntryDepth = 0;
+        public static int AK_CleanEntryDepth = 0;
         [FruitLib.MenuCategory("AK-47")] public static int AK_CavitationPeakRadius = 0;
         [FruitLib.MenuCategory("AK-47")] public static float AK_HardTissueScale = 0f;
-        [FruitLib.MenuCategory("AK-47")] public static float AK_PenetrationDeflect = 0f;
+        [MenuCategory("AK-47"), MenuLabel("Wall penetration"), MenuRange(0f, 3f)] public static float AK_PenetrationScale = 0f;
+        public static float AK_PenetrationDeflect = 0f;
         [FruitLib.MenuCategory("AK-47")] public static float AK_RicochetAngle = 0f;
         [FruitLib.MenuCategory("AK-47")] public static int AK_MaxBounces = 0;
-        [FruitLib.MenuCategory("AK-47")] public static float AK_RicochetEnergyLoss = 0f;
-        [FruitLib.MenuCategory("AK-47")] public static float AK_RicochetScatter = 0f;
+        public static float AK_RicochetEnergyLoss = 0f;
+        public static float AK_RicochetScatter = 0f;
 
         // RM870
         [FruitLib.MenuCategory("RM870")] public static float RM870_FireRateRPM = 0f;
@@ -158,54 +156,51 @@ namespace GunsGunsGuns.Core
         [FruitLib.MenuCategory("RM870")] public static float RM870_SpreadDegrees = 0f;
         [FruitLib.MenuCategory("RM870")] public static float RM870_BulletMassGrams = 0f;
         [FruitLib.MenuCategory("RM870")] public static float RM870_MuzzleVelocity = 0f;
-        [FruitLib.MenuCategory("RM870")] public static float RM870_DragCoefficient = 0f;
-        [FruitLib.MenuCategory("RM870")] public static float RM870_RoundLifetime = 0f;
+        public static float RM870_DragCoefficient = 0f;
+        public static float RM870_RoundLifetime = 0f;
         [FruitLib.MenuCategory("RM870")] public static float RM870_ImpactImpulse = 0f;
         [FruitLib.MenuCategory("RM870")] public static float RM870_WorldImpulse = 0f;
-        [FruitLib.MenuCategory("RM870")] public static int RM870_CleanEntryDepth = 0;
+        public static int RM870_CleanEntryDepth = 0;
         [FruitLib.MenuCategory("RM870")] public static int RM870_CavitationPeakRadius = 0;
         [FruitLib.MenuCategory("RM870")] public static float RM870_HardTissueScale = 0f;
-        [FruitLib.MenuCategory("RM870")] public static float RM870_PenetrationDeflect = 0f;
+        [MenuCategory("RM870"), MenuLabel("Wall penetration"), MenuRange(0f, 3f)] public static float RM870_PenetrationScale = 0f;
+        public static float RM870_PenetrationDeflect = 0f;
         [FruitLib.MenuCategory("RM870")] public static float RM870_RicochetAngle = 0f;
         [FruitLib.MenuCategory("RM870")] public static int RM870_MaxBounces = 0;
-        [FruitLib.MenuCategory("RM870")] public static float RM870_RicochetEnergyLoss = 0f;
-        [FruitLib.MenuCategory("RM870")] public static float RM870_RicochetScatter = 0f;
+        public static float RM870_RicochetEnergyLoss = 0f;
+        public static float RM870_RicochetScatter = 0f;
 
         // AS50
         [FruitLib.MenuCategory("AS50")] public static float AS50_FireRateRPM = 0f;
         [FruitLib.MenuCategory("AS50")] public static float AS50_BulletMassGrams = 0f;
         [FruitLib.MenuCategory("AS50")] public static float AS50_MuzzleVelocity = 0f;
-        [FruitLib.MenuCategory("AS50")] public static float AS50_DragCoefficient = 0f;
-        [FruitLib.MenuCategory("AS50")] public static float AS50_RoundLifetime = 0f;
+        public static float AS50_DragCoefficient = 0f;
+        public static float AS50_RoundLifetime = 0f;
         [FruitLib.MenuCategory("AS50")] public static float AS50_ImpactImpulse = 0f;
         [FruitLib.MenuCategory("AS50")] public static float AS50_WorldImpulse = 0f;
-        [FruitLib.MenuCategory("AS50")] public static int AS50_CleanEntryDepth = 0;
+        public static int AS50_CleanEntryDepth = 0;
         [FruitLib.MenuCategory("AS50")] public static int AS50_CavitationPeakRadius = 0;
         [FruitLib.MenuCategory("AS50")] public static float AS50_HardTissueScale = 0f;
-        [FruitLib.MenuCategory("AS50")] public static float AS50_PenetrationDeflect = 0f;
+        [MenuCategory("AS50"), MenuLabel("Wall penetration"), MenuRange(0f, 3f)] public static float AS50_PenetrationScale = 0f;
+        public static float AS50_PenetrationDeflect = 0f;
         [FruitLib.MenuCategory("AS50")] public static float AS50_RicochetAngle = 0f;
         [FruitLib.MenuCategory("AS50")] public static int AS50_MaxBounces = 0;
-        [FruitLib.MenuCategory("AS50")] public static float AS50_RicochetEnergyLoss = 0f;
-        [FruitLib.MenuCategory("AS50")] public static float AS50_RicochetScatter = 0f;
+        public static float AS50_RicochetEnergyLoss = 0f;
+        public static float AS50_RicochetScatter = 0f;
         [FruitLib.MenuCategory("AS50")] public static bool ShowScope = true;
-        [FruitLib.MenuCategory("AS50")] public static float ScopeIdleHz = 30f;  // refresh with the gun down
+        [MenuCategory("AS50"), MenuLabel("Scope resolution"), MenuRange(256, 2048)] public static int ScopeResolution = 768;
+        public static float ScopeIdleHz = 30f;  // refresh with the gun down
         [FruitLib.MenuCategory("AS50")] public static float AS50_AdsSway = 0f;
         [FruitLib.MenuCategory("AS50")] public static float AS50_AdsShake = 0f;
         [FruitLib.MenuCategory("AS50")] public static float AS50_ScopeFov = 0f;
 
-        // ── Debug ─────────────────────────────────────────────────────────────
-        [FruitLib.MenuCategory("Debug")] public static bool DebugDrawPath = false;
-        [FruitLib.MenuCategory("Debug")] public static float PathWidth = 0.02f;
-        [FruitLib.MenuCategory("Debug")] public static float PathLifetime = 8f;   // how long a path lingers after the round dies
-        [FruitLib.MenuCategory("Debug")] public static int PathMaxPoints = 512;
-        [FruitLib.MenuCategory("Debug")] public static bool DebugLog = false;
-
         // ── Breath ─────────────────────────────────────────────────────────────
 
+        [MenuCategory("Breath"), MenuLabel("Allow holding breath")] public static bool AllowBreath = true;
         [FruitLib.MenuCategory("Breath")] public static float BreathSway = 0.05f;  // multiplier while held
         [FruitLib.MenuCategory("Breath")] public static float BreathDuration = 5f;
         [FruitLib.MenuCategory("Breath")] public static float BreathRecovery = 4f;
-        [FruitLib.MenuCategory("Breath")] public static float BreathFade = 0.25f; // seconds to settle
+        public static float BreathFade = 0.25f; // seconds to settle
         [FruitLib.MenuCategory("Breath")] public static bool BreathMeter = true;
 
         // ── Crosshair ─────────────────────────────────────────────────────────
@@ -213,55 +208,49 @@ namespace GunsGunsGuns.Core
         [FruitLib.MenuCategory("Crosshair")] public static bool ShowCrosshair = true;
         [FruitLib.MenuCategory("Crosshair")] public static bool HideNativeCrosshair = true;  // drop the game's centre dot while a gun is out
 
-        // ── Sounds ───────────────────────────────────────────────────────────
-        public static bool ShowImpactMarks = true;
+        // ── Feel ──────────────────────────────────────────────────────────────
+
+        [MenuCategory("Feel"), MenuLabel("Show gun model")]                        public static bool ShowModel = true;
+        [MenuCategory("Feel"), MenuLabel("Gun kick")]                              public static bool ModelRecoil = true;  // the gun's own kick
+        [MenuCategory("Feel"), MenuLabel("Camera kick")]                           public static bool ViewRecoil = true;   // the camera's
+        [MenuCategory("Feel"), MenuLabel("Recoil strength"), MenuRange(0f, 3f)]    public static float RecoilScale = 1f;
+        [MenuCategory("Feel"), MenuLabel("Gun colour, red"), MenuRange(0f, 1f)]    public static float ModelColorR = 0.30f;
+        [MenuCategory("Feel"), MenuLabel("Gun colour, green"), MenuRange(0f, 1f)]  public static float ModelColorG = 0.28f;
+        [MenuCategory("Feel"), MenuLabel("Gun colour, blue"), MenuRange(0f, 1f)]   public static float ModelColorB = 0.26f;
+        [MenuCategory("Feel"), MenuLabel("Tracers")]                               public static bool ShowTracer = true;
+        [MenuCategory("Feel"), MenuLabel("Gunshot volume"), MenuRange(0f, 1f)]     public static float ShotVolume = 1f;
+        [MenuCategory("Feel"), MenuLabel("Bullet holes")]                          public static bool ShowImpactMarks = true;
+        [MenuCategory("Feel"), MenuLabel("Impact volume"), MenuRange(0f, 1f)]      public static float ImpactVolume = 0.15f;
+        [MenuCategory("Feel"), MenuLabel("Ejected shells")]                        public static bool ShowShells = true;
+        [MenuCategory("Feel"), MenuLabel("Custom shell models")]                   public static bool CustomShells = false;
+        [MenuCategory("Feel"), MenuLabel("Aim down sights")]                       public static bool AllowAds = true;
+        [MenuCategory("Feel"), MenuLabel("Lower mouse sensitivity when aiming")]   public static bool AdsSensScaling = false;
+        [MenuCategory("Feel"), MenuLabel("Other mods' forces bend rounds")]        public static bool ExternalForces = true;
+
+        // ── Controls ───────────────────────────────────────────────────────────
+
+        [FruitLib.MenuCategory("Controls")] public static KeyCode HoldBreathKey = KeyCode.Mouse4;
+        [FruitLib.MenuCategory("Controls")] public static bool AdsToggle = false;  // otherwise hold RMB
+
+        // ── Debug ─────────────────────────────────────────────────────────────
+        [FruitLib.MenuCategory("Debug")] public static bool DebugDrawPath = false;
+        [FruitLib.MenuCategory("Debug")] public static float PathLifetime = 8f;   // how long a path lingers after the round dies
+        [FruitLib.MenuCategory("Debug")] public static bool DebugLog = false;
+        [MenuCategory("Debug"), MenuLabel("ADS offset tuning (keypad)")] public static bool AdsTuning = false;   // keypad nudging, aimed only
+
+        // ── Ini-only (no category: kept in the file, not in the menu) ─────────
+        public static float PathWidth = 0.02f;
+        public static int PathMaxPoints = 512;
         public static float ImpactPitch = 0.65f; // matches the pitched-down fire sound
-        public static float ImpactVolume = 0.15f;
         public static float ImpactMaxDistance = 60f;
         public static float MarkSize = 0.07f;
         public static float MarkSkidStretch = 4f;    // how far a grazing mark elongates
         public static float MarkAlpha = 0.85f;
         public static float MarkLifetime = 25f;
         public static int MaxMarks = 96;
-
-        // ── Model ─────────────────────────────────────────────────────────────
-
-        public static bool ShowModel = true;
-        public static bool ModelRecoil = true;  // the gun's own kick
-        public static bool ViewRecoil = true;  // the camera's
-        public static float RecoilScale = 1f;
-        public static float ModelColorR = 0.30f;
-        public static float ModelColorG = 0.28f;
-        public static float ModelColorB = 0.26f;
-
-        // ── Shells ─────────────────────────────────────────────────────────────
-        public static bool CustomShells = false;
-
-        // ── Breath ────────────────────────────────────────────────────────────
-        public static bool AllowBreath = true;
-
-
-        // ── Sights ─────────────────────────────────────────────
-        public static bool AllowAds = true;
-        public static bool AdsTuning = false;   // keypad nudging, aimed only
-        public static bool AdsSensScaling = false;
-
-        // ── Barrel ────────────────────────────────────────────────────────────
         public static float AimConvergence = 100f;
         public static float MuzzleClearance = 0.45f;
-
-        // ── Presentation ──────────────────────────────────────────────────────
         public static float PitchVariance = 0.05f;  // ±5% so repeat shots aren't monotone
-        public static float ShotVolume = 1f;
-        public static bool ShowTracer = true;
-
-        // ── External forces ───────────────────────────────────────────────────
-        public static bool ExternalForces = true;
-        public static int ScopeResolution = 768;
-
-
-        // ── Shells ────────────────────────────────────────────────────────────
-        public static bool ShowShells = true;
         public static float ShellLifetime = 20f;
         public static int MaxShells = 48;
     }
@@ -275,7 +264,7 @@ namespace GunsGunsGuns.Core
         {
             try
             {
-                if (!File.Exists(IniPath)) { Write(); MelonLogger.Msg("Wrote default GGGConfig.ini"); return; }
+                if (!File.Exists(IniPath)) { Write(); Dbg.Log("Wrote default GGGConfig.ini"); return; }
 
                 var seen = new HashSet<string>();
                 bool stale = false;
@@ -311,8 +300,8 @@ namespace GunsGunsGuns.Core
                 foreach (var f in Fields())
                     if (!seen.Contains(f.Name)) { stale = true; break; }
 
-                if (stale) { Write(); MelonLogger.Msg("GGGConfig.ini refreshed — keys added or dropped."); }
-                else MelonLogger.Msg("GGGConfig.ini loaded.");
+                if (stale) { Write(); Dbg.Log("GGGConfig.ini refreshed — keys added or dropped."); }
+                else Dbg.Log("GGGConfig.ini loaded.");
             }
             catch (System.Exception e) { MelonLogger.Warning($"Config load failed: {e.Message}"); }
         }
@@ -356,7 +345,7 @@ namespace GunsGunsGuns.Core
             return true;
         }
 
-        private static void Write()
+        internal static void Write()
         {
             var ci = System.Globalization.CultureInfo.InvariantCulture;
             var sb = new System.Text.StringBuilder();
@@ -371,7 +360,7 @@ namespace GunsGunsGuns.Core
                 sb.AppendLine($"{f.Name} = {s}");
             }
 
-            File.WriteAllText(IniPath, sb.ToString());
+            FruitPaths.WriteAllTextAtomic(IniPath, sb.ToString());
         }
     }
 
